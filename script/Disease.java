@@ -3,149 +3,490 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.ArrayList;
 
 public class Disease {
-	public static void main(String[] args) throws IOException{
+	public static void main(String[] args) throws IOException{		 
 		
-		int count = 0;
+		String title = null;
+		
+		// OMIM All
+		BufferedReader br_mim2gene = new BufferedReader(new FileReader(args[0]));
+		
+		HashMap<String, String> OMIM_All_Map = new HashMap<String, String>();
+		
 		String line;
 		String[] split;
-		String Orphanet_ID = null, HPO_ID = null, temp = null;
 		
-		String PMID = null;
-
-		int b_number = 0;
+		String OMIM_ID = null, Orphanet_ID = null, type = null;
 		
-		count = 0;
-		
-		HashMap<String, String> Orphanet_Manual = new HashMap<String, String>();
-		HashMap<String, String> Orphanet_CaceReport = new HashMap<String, String>();
-		
-		// Manual
-		BufferedReader br_Orphanet_HPO_Manual = new BufferedReader(new FileReader(args[0]));
-
 		for (int i = 0; i < 5; i++)
-			br_Orphanet_HPO_Manual.readLine();
-		
-		while((line = br_Orphanet_HPO_Manual.readLine()) != null)
+			br_mim2gene.readLine();
+
+		while((line = br_mim2gene.readLine()) != null)
 		{
-			split= line.split("\t");
+			split = line.split("\t");
+			
+			OMIM_ID = split[0];
+			type = split[1];
+			
+			if (type.equals("gene/phenotype") || type.equals("phenotype") || type.equals("predominantly phenotypes"))
+				if(OMIM_All_Map.get(OMIM_ID) == null)
+					OMIM_All_Map.put(OMIM_ID,"");
+		}
+		br_mim2gene.close();
 
-			if(split[0].split(":")[0].equals("ORPHA"))
+		
+		// OMIM label JP
+		BufferedReader br_UR_DBMS = new BufferedReader(new FileReader(args[1]));
+		HashMap<String, String> UR_OMIM_jp_label_Map = new HashMap<String, String>();
+		String OMIM_jp = null;
+
+		while((line = br_UR_DBMS.readLine()) != null)
+		{
+			try {
+				split = line.split("\t");
+			
+				OMIM_ID = split[0].replace("OMIM:", "");
+				OMIM_jp = split[1];
+			}
+			catch (Exception e) {	continue;	}
+
+			if(UR_OMIM_jp_label_Map.get(OMIM_ID) == null)
+				UR_OMIM_jp_label_Map.put(OMIM_ID, OMIM_jp);
+		}
+		br_UR_DBMS.close();
+
+		
+		// Inheritance
+		BufferedReader br_Inheritance = new BufferedReader(new FileReader(args[2]));
+		
+		HashMap<String, String> Inheritance_Map = new HashMap<String, String>();
+		String relationship = null, inheritance = null, temp = null;
+		boolean flag = false;
+		
+		br_Inheritance.readLine();
+		while((line = br_Inheritance.readLine()) != null)
+		{
+			split = line.split("\\|");
+		
+			OMIM_ID = split[1];
+			relationship = split[3];
+			inheritance = split[5].replace("HP:", "");//
+			
+			if(relationship.equals("inheritance_type_of"))
 			{
-				Orphanet_ID = split[0].replace("ORPHA:", "");
-				HPO_ID = split[3].replace("HP:", "");
-
-				if(Orphanet_Manual.get(Orphanet_ID + "\t" + HPO_ID) == null)
+				if(Inheritance_Map.get(OMIM_ID) == null)
+					Inheritance_Map.put(OMIM_ID, inheritance);
+				else
 				{
-					++count;
-					Orphanet_Manual.put(Orphanet_ID + "\t" + HPO_ID, "Manual");
+					flag = false;
+					temp = Inheritance_Map.get(OMIM_ID);
+					
+					for(int i = 0; i < temp.split("\t").length; i++)
+					{
+						split = temp.split("\t");
+						if(split[i].equals(inheritance))
+							flag = true;
+					}
+					if(!flag)
+					{
+						temp = temp + "\t" + inheritance;
+						Inheritance_Map.put(OMIM_ID, temp);
+					}
 				}
 			}
 		}
-		br_Orphanet_HPO_Manual.close();
-		//System.out.println("Orphanet_HPO_Manual Count : " + count);
+		br_Inheritance.close();
+		
+		
+		// OMIM_MONDO, Orphanet_OMIM_Map, Orphanet_MONDO_Map, GTR
+		BufferedReader br_MONDO = new BufferedReader(new FileReader(args[3]));
+		
+		HashMap<String, String> OMIM_MONDO_Map = new HashMap<String, String>();
+		HashMap<String, String> OMIM_UMLS_Map = new HashMap<String, String>();
 
-		// CaseReport
-		count = 0;
-		BufferedReader br_Orphanet_HPO_CaseReport = new BufferedReader(new FileReader(args[1]));
-
-		while((line = br_Orphanet_HPO_CaseReport.readLine()) != null)
+		HashMap<String, String> Orphanet_All_Map = new HashMap<String, String>();
+		HashMap<String, String> Orphanet_MONDO_Map = new HashMap<String, String>();
+		HashMap<String, String> Orphanet_OMIM_Map = new HashMap<String, String>();
+		HashMap<String, String> Orphanet_UMLS_Map = new HashMap<String, String>();
+		
+		ArrayList<String> OMIM_IDs = new ArrayList<String>();
+		ArrayList<String> MONDO_IDs = new ArrayList<String>();
+		ArrayList<String> UMLS_IDs = new ArrayList<String>();
+		ArrayList<String> Orphanet_IDs = new ArrayList<String>();
+		
+		while((line = br_MONDO.readLine()) != null)
 		{
-			split= line.split("\t");
-			Orphanet_ID = split[1].replace("ORDO:", "");
-			HPO_ID = split[2].replace("HP:", "");
-			
-			if(!split[4].equals("Orphanet"))
-			{
-				if(Orphanet_CaceReport.get(Orphanet_ID + "\t" + HPO_ID) == null)
+			try {
+				if(line.equals("[Term]"))
 				{
-					++count;
-					Orphanet_CaceReport.put(Orphanet_ID + "\t" + HPO_ID, "CaseReport");
+					for(;;)
+					{
+						line = br_MONDO.readLine();
+										
+						split = line.split(" ");
+						title = split[0];
+						
+						if(title.equals("id:"))
+							MONDO_IDs.add(line.split("MONDO:")[1]);
+						else if(title.equals("xref:"))
+						{
+							if(split[1].split(":")[0].equals("OMIM"))
+							{
+								if(line.contains("MONDO:equivalentTo"))
+									OMIM_IDs.add(split[1].split(":")[1]);
+							}
+							else if(split[1].split(":")[0].equals("Orphanet"))
+							{
+								if(line.contains("MONDO:equivalentTo"))
+									Orphanet_IDs.add(split[1].split(":")[1]);
+							}
+							else if(split[1].split(":")[0].equals("UMLS"))
+							{
+								if(line.contains("MONDO:equivalentTo"))
+									UMLS_IDs.add(split[1].split(":")[1]);
+							}
+						}
+						
+						if(line.equals("is_obsolete: true"))
+						{
+							MONDO_IDs.clear();
+							OMIM_IDs.clear();
+							Orphanet_IDs.clear();
+							UMLS_IDs.clear();
+							break;
+						}
+						else if(line.equals(""))
+						{
+
+							for(String i : OMIM_IDs)
+							{
+								if(OMIM_All_Map.get(i) == null)
+									OMIM_All_Map.put(i,"");
+								
+								// OMIM MONDO Map
+								if(OMIM_MONDO_Map.get(i) == null)
+									OMIM_MONDO_Map.put(i, MONDO_IDs.get(0));
+								else
+								{
+									temp = OMIM_MONDO_Map.get(i);
+									temp = temp + "\t" + MONDO_IDs.get(0);
+									OMIM_MONDO_Map.put(i, temp);
+								}
+								
+								// OMIM UMLS Map
+								for(String j : UMLS_IDs)
+								{
+									if(OMIM_UMLS_Map.get(i) == null)
+										OMIM_UMLS_Map.put(i, j);
+									else
+									{
+										temp = OMIM_UMLS_Map.get(i);
+										temp = temp + "\t" + j;
+										OMIM_UMLS_Map.put(i, temp);
+									}
+								}
+							}
+							for(String i : Orphanet_IDs)
+							{
+								if(Orphanet_All_Map.get(i) == null)
+								{
+									Orphanet_All_Map.put(i,"");
+								}
+								
+								if(Orphanet_MONDO_Map.get(i) == null)
+								{
+									Orphanet_MONDO_Map.put(i, MONDO_IDs.get(0));
+									if(OMIM_IDs.size() == 1)
+										Orphanet_OMIM_Map.put(i, OMIM_IDs.get(0));
+								}
+								
+								for(String j : UMLS_IDs)
+								{
+									if(Orphanet_UMLS_Map.get(i) == null)
+									{
+										Orphanet_UMLS_Map.put(i, j);
+									}
+									else
+									{
+										temp = Orphanet_UMLS_Map.get(i);
+										temp = temp + "\t" + j;
+										Orphanet_UMLS_Map.put(i, temp);
+									}
+								}
+							}
+							MONDO_IDs.clear();
+							OMIM_IDs.clear();
+							Orphanet_IDs.clear();
+							UMLS_IDs.clear();
+							break;
+						}
+					}
 				}
 			}
+			catch (Exception e) {	continue;	}
 		}
-		br_Orphanet_HPO_CaseReport.close();
-		//System.out.println("Orphanet_HPO_CaseReport Count : " + count);
+		br_MONDO.close();
 		
-		HashMap<String, String> ORDO_Repot = new HashMap<String, String>();
 		
-		// CaseReport
-		BufferedReader br_AnnotOntoORDOHP = new BufferedReader(new FileReader(args[2]));
-		BufferedWriter bw_ORDO_HP_CaseReport = new BufferedWriter(new FileWriter("./Orphanet_HP_Association.ttl"));		
-		
-		bw_ORDO_HP_CaseReport.write("PREFIX dcterms: <http://purl.org/dc/terms/>");bw_ORDO_HP_CaseReport.newLine();
-		bw_ORDO_HP_CaseReport.write("PREFIX foaf: <http://xmlns.com/foaf/0.1>");bw_ORDO_HP_CaseReport.newLine();
-		bw_ORDO_HP_CaseReport.write("PREFIX ipubmed: <http://identifiers.org/pubmed/>");bw_ORDO_HP_CaseReport.newLine();
-		bw_ORDO_HP_CaseReport.write("PREFIX oa: <http://www.w3.org/ns/oa#>");bw_ORDO_HP_CaseReport.newLine();
-		bw_ORDO_HP_CaseReport.write("PREFIX obo: <http://purl.obolibrary.org/obo/>");bw_ORDO_HP_CaseReport.newLine();
-		bw_ORDO_HP_CaseReport.write("PREFIX ordo: <http://www.orpha.net/ORDO/>");bw_ORDO_HP_CaseReport.newLine();
-		bw_ORDO_HP_CaseReport.write("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>");bw_ORDO_HP_CaseReport.newLine();
-		bw_ORDO_HP_CaseReport.write("PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>");bw_ORDO_HP_CaseReport.newLine();
-		
-		while((line = br_AnnotOntoORDOHP.readLine()) != null)
-		{
-			split= line.split("\t");
-			
-			PMID = split[1];
-			Orphanet_ID = split[2].replace("ORDO:", "");
-			HPO_ID = split[4].replace("HP:", "");
+		// Gene_Review
+		BufferedReader br_Gene_Review = new BufferedReader(new FileReader(args[4]));
+		HashMap<String, String> Gene_Review_Map = new HashMap<String, String>();
+		String NBK_ID = null;
+		br_Gene_Review.readLine();
 
-			if(ORDO_Repot.get(Orphanet_ID + "\t" + HPO_ID) == null)
-			{
-				ORDO_Repot.put(Orphanet_ID + "\t" + HPO_ID, PMID);
-			}
+		while((line = br_Gene_Review.readLine()) != null)
+		{
+			split = line.split("\t");
+		
+			NBK_ID = split[0];
+			OMIM_ID = split[2];			
+			
+			if(Gene_Review_Map.get(OMIM_ID) == null)
+				Gene_Review_Map.put(OMIM_ID, NBK_ID);
 			else
 			{
-				temp = ORDO_Repot.get(Orphanet_ID + "\t" + HPO_ID);
-				temp = temp + "\t" + PMID;
-				ORDO_Repot.put(Orphanet_ID + "\t" + HPO_ID, temp);
+				temp = Gene_Review_Map.get(OMIM_ID);
+				temp = temp + "\t" + NBK_ID;
+				Gene_Review_Map.put(OMIM_ID, temp);
 			}
 		}
-		br_AnnotOntoORDOHP.close();
-
-		int tempc = 0, tempm = 0;
+		br_Gene_Review.close();
 		
-		for(String key : Orphanet_CaceReport.keySet())
+		
+		// UR-DBMS_Link = RDB data
+		BufferedReader br_UR_DBMS_Link_OMIM = new BufferedReader(new FileReader(args[5]));
+		HashMap<String, String> OMIM_UR_DBMS_Link_Map = new HashMap<String, String>();
+		String UR_DBMS_Link = null;
+		
+		while((line = br_UR_DBMS_Link_OMIM.readLine()) != null)
 		{
-			tempm = 0;
+			split = line.split("\t");
 			
-			Orphanet_ID = key.split("\t")[0];
-			HPO_ID = key.split("\t")[1];
-			
-			bw_ORDO_HP_CaseReport.write("<https://pubcasefinder.dbcls.jp/phenotype_context/disease:ORDO:" + Orphanet_ID + "/phenotype:HP:" + HPO_ID + ">");bw_ORDO_HP_CaseReport.newLine();
-			bw_ORDO_HP_CaseReport.write("    a oa:Annotation ;");bw_ORDO_HP_CaseReport.newLine();
-			bw_ORDO_HP_CaseReport.write("    oa:hasTarget ordo:Orphanet_" + Orphanet_ID + " ;");bw_ORDO_HP_CaseReport.newLine();
-			bw_ORDO_HP_CaseReport.write("    oa:hasBody obo:HP_" + HPO_ID + " ;");bw_ORDO_HP_CaseReport.newLine();			
-			
-			tempc = ++b_number;
-			
-			bw_ORDO_HP_CaseReport.write("    dcterms:source _:b" + tempc + " ;");bw_ORDO_HP_CaseReport.newLine();
-			bw_ORDO_HP_CaseReport.write("    obo:ECO_9000001 obo:ECO_0007669 ");
-			
-			if(Orphanet_Manual.get(key) != null)
+			if(split[4].equals("UR-DBMS"))
 			{
-				tempm = ++b_number;
-				bw_ORDO_HP_CaseReport.write(";");bw_ORDO_HP_CaseReport.newLine();
-				bw_ORDO_HP_CaseReport.write("    dcterms:source _:b" + tempm + " ;");bw_ORDO_HP_CaseReport.newLine();
-				bw_ORDO_HP_CaseReport.write("    obo:ECO_9000001 obo:ECO_0000218 .");bw_ORDO_HP_CaseReport.newLine();
-				Orphanet_Manual.remove(key);
+				OMIM_ID = split[1].replace("OMIM:", "");
+				UR_DBMS_Link = split[3];
+				
+				if (UR_DBMS_Link.equals(""))
+					continue;
+				
+				if(OMIM_UR_DBMS_Link_Map.get(OMIM_ID) == null)
+					OMIM_UR_DBMS_Link_Map.put(OMIM_ID, UR_DBMS_Link);				
+			}
+		}
+		br_UR_DBMS_Link_OMIM.close();
+		
+		BufferedReader br_UR_DBMS_Link_orphanet = new BufferedReader(new FileReader(args[6]));
+		HashMap<String, String> Orphanet_UR_DBMS_Link_Map = new HashMap<String, String>();
+		while((line = br_UR_DBMS_Link_orphanet.readLine()) != null)
+		{
+			split = line.split("\t");
+			
+			if(split[4].equals("UR-DBMS"))
+			{
+				Orphanet_ID = split[1].replace("\"", "").replace("ORDO:", "");
+				UR_DBMS_Link = split[3];
+				
+				if (UR_DBMS_Link.equals(""))
+					continue;
+				
+				if(Orphanet_UR_DBMS_Link_Map.get(Orphanet_ID) == null)
+					Orphanet_UR_DBMS_Link_Map.put(Orphanet_ID, UR_DBMS_Link);
+			}
+		}
+		br_UR_DBMS_Link_orphanet.close();
+
+		
+		// KEGG
+		BufferedReader br_KEGG = new BufferedReader(new FileReader(args[7]));
+		HashMap<String, String> KEGG_Map = new HashMap<String, String>();
+		String KEGG_ID = null;
+		
+		while((line = br_KEGG.readLine()) != null)
+		{
+			split = line.split("\t");
+		
+			OMIM_ID = split[0];
+			KEGG_ID = split[1];
+			
+			if(KEGG_Map.get(OMIM_ID) == null)
+				KEGG_Map.put(OMIM_ID, KEGG_ID);
+		}
+		br_KEGG.close();
+
+
+		BufferedWriter bw_OMIM = new BufferedWriter(new FileWriter("./OMIM.ttl"));
+		
+		bw_OMIM.write("PREFIX dcterms: <http://purl.org/dc/terms/>");bw_OMIM.newLine();
+		bw_OMIM.write("PREFIX nando: <http://nanbyodata.jp/ontology/nando#>");bw_OMIM.newLine();
+		bw_OMIM.write("PREFIX ncit: <http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#>");bw_OMIM.newLine();
+		bw_OMIM.write("PREFIX med2rdf: <http://med2rdf.org/ontology/>");bw_OMIM.newLine();
+		bw_OMIM.write("PREFIX mim: <http://identifiers.org/mim/>");bw_OMIM.newLine();
+		bw_OMIM.write("PREFIX obo: <http://purl.obolibrary.org/obo/>");bw_OMIM.newLine();
+		bw_OMIM.write("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>");bw_OMIM.newLine();	
+		bw_OMIM.write("PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>");bw_OMIM.newLine();
+
+		// OMIM
+		for(String key : OMIM_All_Map.keySet())
+		{	
+			bw_OMIM.write("mim:" + key);bw_OMIM.newLine();
+			bw_OMIM.write("    a med2rdf:Disease, ncit:C7057 ;");bw_OMIM.newLine();
+			bw_OMIM.write("    dcterms:identifier \"" + key + "\"");
+			
+			// JP label output
+			if(UR_OMIM_jp_label_Map.get(key) != null)
+			{
+				bw_OMIM.write(" ;");bw_OMIM.newLine();
+				temp = UR_OMIM_jp_label_Map.get(key);
+				bw_OMIM.write("    rdfs:label \"" + temp + "\"@ja");				
+			}
+			
+			// Inheritance output
+			if(Inheritance_Map.get(key) != null)
+			{
+				bw_OMIM.write(" ;");bw_OMIM.newLine();
+				bw_OMIM.write("    nando:hasInheritance ");
+				temp = Inheritance_Map.get(key);
+				
+				if(temp != null)
+				{
+					for(int i = 0; i < temp.split("\t").length; i++)
+					{
+						split = temp.split("\t");
+						
+						if(temp.split("\t").length - 1 == i)
+							bw_OMIM.write("obo:HP_" + split[i]);
+						else
+							bw_OMIM.write("obo:HP_" + split[i] + ", ");
+					}
+				}
+			}
+			
+			// MONDO output
+			if(OMIM_MONDO_Map.get(key) != null)
+			{
+				bw_OMIM.write(" ;");bw_OMIM.newLine();
+				bw_OMIM.write("    rdfs:seeAlso ");
+				temp = OMIM_MONDO_Map.get(key);
+				
+				if(temp != null)
+				{
+					for(int i = 0; i < temp.split("\t").length; i++)
+					{
+						split = temp.split("\t");
+						
+						if(temp.split("\t").length - 1 == i)
+							bw_OMIM.write("obo:MONDO_" + split[i]);
+						else
+							bw_OMIM.write("obo:MONDO_" + split[i] + ", ");
+					}
+				}
+				
+			}
+			
+			// UR-DBMS Link output
+			if(OMIM_UR_DBMS_Link_Map.get(key) != null)
+			{
+				bw_OMIM.write(" ;");bw_OMIM.newLine();
+				temp = OMIM_UR_DBMS_Link_Map.get(key);
+				bw_OMIM.write("    rdfs:seeAlso <" + temp + ">");
+			}
+			
+			// KEGG output
+			if(KEGG_Map.get(key) != null)
+			{
+				bw_OMIM.write(" ;");bw_OMIM.newLine();
+				temp = KEGG_Map.get(key);
+				bw_OMIM.write("    rdfs:seeAlso <https://www.kegg.jp/dbget-bin/www_bget?" + temp + ">");
+			}
+			
+			// Gene Review output
+			if(Gene_Review_Map.get(key) != null)
+			{
+				bw_OMIM.write(" ;");bw_OMIM.newLine();
+				bw_OMIM.write("    rdfs:seeAlso ");
+				temp = Gene_Review_Map.get(key);
+				
+				if(temp != null)
+				{
+					for(int i = 0; i < temp.split("\t").length; i++)
+					{
+						split = temp.split("\t");
+						
+						if(temp.split("\t").length - 1 == i)
+							bw_OMIM.write("<https://www.ncbi.nlm.nih.gov/books/" + split[i] + "/>");
+						else
+							bw_OMIM.write("<https://www.ncbi.nlm.nih.gov/books/" + split[i] + "/>" + ", ");
+					}
+				}
+			}
+			
+			// GTR output
+			if(OMIM_UMLS_Map.get(key) != null)
+			{
+				bw_OMIM.write(" ;");bw_OMIM.newLine();
+				bw_OMIM.write("    rdfs:seeAlso ");
+				temp = OMIM_UMLS_Map.get(key);
+				
+				if(temp != null)
+				{
+					for(int i = 0; i < temp.split("\t").length; i++)
+					{
+						split = temp.split("\t");
+						
+						if(temp.split("\t").length - 1 == i)
+							bw_OMIM.write("<https://www.ncbi.nlm.nih.gov/gtr/all/tests/?term=" + split[i] + "/> .");
+						else
+							bw_OMIM.write("<https://www.ncbi.nlm.nih.gov/gtr/all/tests/?term=" + split[i] + "/>" + ", ");
+					}
+				}
 			}
 			else
+				bw_OMIM.write(" .");bw_OMIM.newLine();
+		}
+		bw_OMIM.close();
+		
+		
+		// Orphanet
+		BufferedWriter bw_Orphanet = new BufferedWriter(new FileWriter("./Orphanet.ttl"));		
+		
+		bw_Orphanet.write("PREFIX dcterms: <http://purl.org/dc/terms/>");bw_Orphanet.newLine();
+		bw_Orphanet.write("PREFIX nando: <http://nanbyodata.jp/ontology/nando#>");bw_Orphanet.newLine();
+		bw_Orphanet.write("PREFIX ncit: <http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#>");bw_Orphanet.newLine();
+		bw_Orphanet.write("PREFIX med2rdf: <http://med2rdf.org/ontology/>");bw_Orphanet.newLine();
+		bw_Orphanet.write("PREFIX obo: <http://purl.obolibrary.org/obo/>");bw_Orphanet.newLine();
+		bw_Orphanet.write("PREFIX ordo: <http://www.orpha.net/ORDO/>");bw_Orphanet.newLine();
+		bw_Orphanet.write("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>");bw_Orphanet.newLine();
+		bw_Orphanet.write("PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>");bw_Orphanet.newLine();
+
+		
+		// Orphanet
+		for(String key : Orphanet_All_Map.keySet())
+		{	
+
+			String omim = Orphanet_OMIM_Map.get(key);
+			
+			bw_Orphanet.write("ordo:Orphanet_" + key);bw_Orphanet.newLine();
+			bw_Orphanet.write("    a med2rdf:Disease, ncit:C7057 ;");bw_Orphanet.newLine();
+			bw_Orphanet.write("    dcterms:identifier \"" + key + "\"");
+			
+			// JP label output
+			if(UR_OMIM_jp_label_Map.get(omim) != null)
 			{
-				bw_ORDO_HP_CaseReport.write(".");bw_ORDO_HP_CaseReport.newLine();
+				bw_Orphanet.write(" ;");bw_Orphanet.newLine();
+				temp = UR_OMIM_jp_label_Map.get(omim);
+				bw_Orphanet.write("    rdfs:label \"" + temp + "\"@ja");				
 			}
-
-			bw_ORDO_HP_CaseReport.write("_:b" + tempc);bw_ORDO_HP_CaseReport.newLine();
-			bw_ORDO_HP_CaseReport.write("    dcterms:creator \"Database Center for Life Science\"");
-
-			if(ORDO_Repot.get(key) != null)
+		
+			// Inheritance
+			if(Inheritance_Map.get(omim) != null)
 			{
-				bw_ORDO_HP_CaseReport.write(" ;");bw_ORDO_HP_CaseReport.newLine();
-				bw_ORDO_HP_CaseReport.write("    dcterms:references ");
-				temp = ORDO_Repot.get(key);
+				bw_Orphanet.write(" ;");bw_Orphanet.newLine();
+				bw_Orphanet.write("    nando:hasInheritance ");
+				temp = Inheritance_Map.get(omim);
 				
 				if(temp != null)
 				{
@@ -155,45 +496,84 @@ public class Disease {
 						
 						if(temp.split("\t").length - 1 == i)
 						{
-							bw_ORDO_HP_CaseReport.write("ipubmed:" + split[i] + " .");bw_ORDO_HP_CaseReport.newLine();
+							bw_Orphanet.write("obo:HP_" + split[i]);
 						}
 						else
-							bw_ORDO_HP_CaseReport.write("ipubmed:" + split[i] + ", ");
+							bw_Orphanet.write("obo:HP_" + split[i] + ", ");
+					}
+				}
+				
+			}
+			
+			// Orphanet_MONDO_Map
+			if(Orphanet_MONDO_Map.get(key) != null)
+			{
+				bw_Orphanet.write(" ;");bw_Orphanet.newLine();
+				temp = Orphanet_MONDO_Map.get(key);
+				bw_Orphanet.write("    rdfs:seeAlso obo:MONDO_" + temp);
+			}
+			
+			// UR-DBMS Link
+			if(Orphanet_UR_DBMS_Link_Map.get(key) != null)
+			{
+				bw_Orphanet.write(" ;");bw_Orphanet.newLine();
+				temp = Orphanet_UR_DBMS_Link_Map.get(key);
+				bw_Orphanet.write("    rdfs:seeAlso <" + temp + ">");
+			}
+
+			// KEGG output
+			if(KEGG_Map.get(omim) != null)
+			{
+				bw_Orphanet.write(" ;");bw_Orphanet.newLine();
+				temp = KEGG_Map.get(omim);
+				bw_Orphanet.write("    rdfs:seeAlso <https://www.kegg.jp/dbget-bin/www_bget?" + temp + ">");
+			}
+			
+			// Gene Review
+			if(Gene_Review_Map.get(omim) != null)
+			{
+				bw_Orphanet.write(" ;");bw_Orphanet.newLine();
+				bw_Orphanet.write("    rdfs:seeAlso ");
+				temp = Gene_Review_Map.get(omim);
+				
+				if(temp != null)
+				{
+					for(int i = 0; i < temp.split("\t").length; i++)
+					{
+						split = temp.split("\t");
+						
+						if(temp.split("\t").length - 1 == i)
+							bw_Orphanet.write("<https://www.ncbi.nlm.nih.gov/books/"+split[i]+"/>");
+						else
+							bw_Orphanet.write("<https://www.ncbi.nlm.nih.gov/books/"+split[i]+"/>" + ", ");
+					}
+				}
+				
+			}
+
+			// GTR output
+			if(Orphanet_UMLS_Map.get(key) != null)
+			{
+				bw_Orphanet.write(" ;");bw_Orphanet.newLine();
+				bw_Orphanet.write("    rdfs:seeAlso ");
+				temp = Orphanet_UMLS_Map.get(key);
+				
+				if(temp != null)
+				{
+					for(int i = 0; i < temp.split("\t").length; i++)
+					{
+						split = temp.split("\t");
+						
+						if(temp.split("\t").length - 1 == i)
+							bw_Orphanet.write("<https://www.ncbi.nlm.nih.gov/gtr/all/tests/?term=" + split[i] + "/> .");
+						else
+							bw_Orphanet.write("<https://www.ncbi.nlm.nih.gov/gtr/all/tests/?term=" + split[i] + "/>" + ", ");
 					}
 				}
 			}
 			else
-			{
-				bw_ORDO_HP_CaseReport.write(" .");bw_ORDO_HP_CaseReport.newLine();
-			}			
-			if(tempm > 0)
-			{
-				bw_ORDO_HP_CaseReport.write("_:b" + tempm);bw_ORDO_HP_CaseReport.newLine();
-				bw_ORDO_HP_CaseReport.write("    dcterms:creator \"Orphanet\" ;");bw_ORDO_HP_CaseReport.newLine();
-				bw_ORDO_HP_CaseReport.write("    foaf:page <http://compbio.charite.de/jenkins/job/hpo.annotations.current/lastSuccessfulBuild/artifact/current/phenotype.hpoa> .");bw_ORDO_HP_CaseReport.newLine();
-			}
+				bw_Orphanet.write(" .");bw_Orphanet.newLine();
 		}
-		
-		// Manual		
-		for(String key : Orphanet_Manual.keySet())
-		{
-			Orphanet_ID = key.split("\t")[0];
-			HPO_ID = key.split("\t")[1];
-			
-			bw_ORDO_HP_CaseReport.write("<https://pubcasefinder.dbcls.jp/phenotype_context/disease:ORDO:" + Orphanet_ID + "/phenotype:HP:" + HPO_ID + ">");bw_ORDO_HP_CaseReport.newLine();
-			bw_ORDO_HP_CaseReport.write("    a oa:Annotation ;");bw_ORDO_HP_CaseReport.newLine();
-			bw_ORDO_HP_CaseReport.write("    oa:hasTarget ordo:Orphanet_" + Orphanet_ID + " ;");bw_ORDO_HP_CaseReport.newLine();
-			bw_ORDO_HP_CaseReport.write("    oa:hasBody obo:HP_" + HPO_ID + " ;");bw_ORDO_HP_CaseReport.newLine();						
-			
-			bw_ORDO_HP_CaseReport.write("    dcterms:source _:b" + ++b_number + " ;");bw_ORDO_HP_CaseReport.newLine();
-			bw_ORDO_HP_CaseReport.write("    obo:ECO_9000001 obo:ECO_0000218 .");bw_ORDO_HP_CaseReport.newLine();
-			
-			bw_ORDO_HP_CaseReport.write("_:b" + b_number);bw_ORDO_HP_CaseReport.newLine();
-			bw_ORDO_HP_CaseReport.write("    dcterms:creator \"Orphanet\" ;");bw_ORDO_HP_CaseReport.newLine();
-			bw_ORDO_HP_CaseReport.write("    foaf:page <http://compbio.charite.de/jenkins/job/hpo.annotations.current/lastSuccessfulBuild/artifact/current/phenotype.hpoa> .");bw_ORDO_HP_CaseReport.newLine();
-		}
-		
-		bw_ORDO_HP_CaseReport.close();
+		bw_Orphanet.close();
 	}
 }
-
