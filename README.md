@@ -2,8 +2,95 @@
 
 ## Prerequisites
 - Java
-
+-----------------
 ## Data Download
+<table style="width:39%;">
+    <colgroup>
+        <col width="19%" />
+        <col width="19%" />
+    </colgroup>
+<thead>
+    <tr class="header">
+        <th>Data</th>
+        <th>Resource link</th>
+    </tr>
+</thead>
+<tbody>
+    <tr class="odd">
+        <td>hp.obo</td>
+        <td>http://purl.obolibrary.org/obo/hp.obo</td>
+    </tr>
+    <tr class="even">
+        <td>mondo.obo</td>
+        <td>http://purl.obolibrary.org/obo/mondo.obo</td>
+    </tr>
+    <tr class="odd">
+        <td>mim2gene.txt</td>
+        <td>https://www.omim.org/static/omim/data/mim2gene.txt</td>
+    </tr>
+    <tr class="even">
+        <td>phenotype.hpoa</td>
+        <td>http://purl.obolibrary.org/obo/hp/hpoa/phenotype.hpoa</td>
+    </tr>
+    <tr class="odd">
+        <td>gencc-submissions.csv</td>
+        <td>https://search.thegencc.org/download</td>
+    </tr>
+    <tr class="even">
+        <td>MedGen_HPO_OMIM_Mapping.txt</td>
+        <td>https://ftp.ncbi.nlm.nih.gov/pub/medgen/MedGen_HPO_OMIM_Mapping.txt.gz</td>
+    </tr>
+    <tr class="odd">
+        <td>NBKid_shortname_OMIM.txt</td>
+        <td>https://ftp.ncbi.nlm.nih.gov/pub/GeneReviews/NBKid_shortname_OMIM.txt</td>
+    </tr>
+    <tr class="even">
+        <td>mim2gene_medgen.txt</td>
+        <td>https://ftp.ncbi.nlm.nih.gov/gene/DATA/mim2gene_medgen</td>
+    </tr>
+    <tr class="odd">
+        <td>Homo_sapiens.gene_info</td>
+        <td>https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz</td>
+    </tr>
+    <tr class="even">
+        <td>en_product4.xml</td>
+        <td>http://www.orphadata.org/data/xml/en_product4.xml<br>ORPHADATA PHENOTYPES ASSOCIATED WITH RARE DISORDERS</td>
+    </tr>
+    <tr class="odd">
+        <td>en_product6.xml</td>
+        <td>http://www.orphadata.org/data/xml/en_product6.xml<br>ORPHADATA GENES ASSOCIATED WITH RARE DISEASES</td>
+    </tr>
+    <tr class="even">
+        <td>HGNC_custom.txt</td>
+        <td>https://www.genenames.org/download/custom/</td>
+    </tr>
+    <tr class="odd">
+        <td></td>
+        <td></td>
+    </tr>
+    <tr class="even">
+        <td></td>
+        <td></td>
+    </tr>
+    <tr class="odd">
+        <td></td>
+        <td><a href="" class="uri"></a></td>
+    </tr>
+    <tr class="even">
+        <td></td>
+        <td><a href="" class="uri"></a></td>
+    </tr>
+    <tr class="odd">
+        <td>OMIM_id_ja.txt</td>
+        <td><a href="https://github.com/aidrd/pubcasefinder-rdf/blob/main/data/source/OMIM_id_ja.txt" class="uri">OMIM_id_ja.txt</a></td>
+    </tr>
+    <tr class="even">
+        <td>HPO_id_ja.txt</td>
+        <td><a href="https://github.com/aidrd/pubcasefinder-rdf/blob/main/data/source/HPO_id_ja.txt" class="uri">HPO_id_ja.txt</a></td>
+    </tr>
+</tbody>
+</table>
+    
 1. hp.obo    - http://purl.obolibrary.org/obo/hp.obo
 2. mondo.obo    - http://purl.obolibrary.org/obo/mondo.obo
 3. mim2gene.txt    - https://www.omim.org/static/omim/data/mim2gene.txt
