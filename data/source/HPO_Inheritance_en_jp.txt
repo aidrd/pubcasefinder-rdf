@@ -1,23 +1,23 @@
 HPO ID	英語	日本語
 HP:0000005	Mode of inheritance	遺伝形式
-HP:0000006	Autosomal dominant inheritance	常染色体優性遺伝
-HP:0001452	Autosomal dominant contiguous gene syndrome	常染色体優性隣接遺伝子症候群
-HP:0025352	Autosomal dominant germline de novo mutation	常染色体優性生殖細胞系列de novo変異
-HP:0012275	Autosomal dominant inheritance with maternal imprinting	母由来インプリンティングを受けている常染色体優性遺伝
-HP:0012274	Autosomal dominant inheritance with paternal imprinting	父由来インプリンティングを受けている常染色体優性遺伝
-HP:0001444	Autosomal dominant somatic cell mutation	常染色体優性体細胞変異
-HP:0001470	Sex-limited autosomal dominant	限性常染色体優性
-HP:0001475	Male-limited autosomal dominant	限雄性常染色体優性
-HP:0000007	Autosomal recessive inheritance	常染色体劣性遺伝
-HP:0031362	Sex-limited autosomal recessive inheritance	限性常染色体劣性遺伝
+HP:0000006	Autosomal dominant inheritance	常染色体顕性遺伝
+HP:0001452	Autosomal dominant contiguous gene syndrome	常染色体顕性隣接遺伝子症候群
+HP:0025352	Autosomal dominant germline de novo mutation	常染色体顕性生殖細胞系列de novo変異
+HP:0012275	Autosomal dominant inheritance with maternal imprinting			母由来インプリンティングを受けている常染色体顕性遺伝
+HP:0012274	Autosomal dominant inheritance with paternal imprinting			父由来インプリンティングを受けている常染色体顕性遺伝
+HP:0001444	Autosomal dominant somatic cell mutation	常染色体顕性体細胞変異
+HP:0001470	Sex-limited autosomal dominant	限性常染色体顕性
+HP:0001475	Male-limited autosomal dominant	限雄性常染色体顕性
+HP:0000007	Autosomal recessive inheritance	常染色体潜性遺伝
+HP:0031362	Sex-limited autosomal recessive inheritance	限性常染色体潜性遺伝
 HP:0001466	Contiguous gene syndrome	隣接遺伝子症候群
-HP:0001452	Autosomal dominant contiguous gene syndrome	常染色体優性隣接遺伝子症候群
+HP:0001452	Autosomal dominant contiguous gene syndrome	常染色体顕性隣接遺伝子症候群
 HP:0003743	Genetic anticipation	表現促進現象
 HP:0003744	Genetic anticipation with paternal anticipation bias	父由来表現促進バイアスを受けている表現促進現象
 HP:0010985	Gonosomal inheritance	性染色体遺伝
 HP:0001417	X-linked inheritance	X連鎖遺伝
-HP:0001423	X-linked dominant inheritance	X連鎖優性遺伝
-HP:0001419	X-linked recessive inheritance	X連鎖劣性遺伝
+HP:0001423	X-linked dominant inheritance	X連鎖顕性遺伝
+HP:0001419	X-linked recessive inheritance	X連鎖潜性遺伝
 HP:0001450	Y-linked inheritance	Y連鎖遺伝
 HP:0001425	Heterogeneous	異質性
 HP:0001427	Mitochondrial inheritance	ミトコンドリア遺伝
@@ -25,7 +25,7 @@ HP:0001426	Multifactorial inheritance	多因子遺伝
 HP:0010984	Digenic inheritance	二遺伝子性遺伝
 HP:0010983	Oligogenic inheritance	寡少因子遺伝
 HP:0010982	Polygenic inheritance	多因子遺伝
-HP:0032113	Semidominant mode of inheritance	半優性遺伝形式
+HP:0032113	Semidominant mode of inheritance	半顕性遺伝形式
 HP:0001428	Somatic mutation	体細胞変異
 HP:0001442	Somatic mosaicism	体細胞モザイク
 HP:0003745	Sporadic	孤発性
